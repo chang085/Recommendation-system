@@ -10,8 +10,10 @@ Dự án này cung cấp một hệ thống đề xuất phim (Movie Recommendat
 
 1. Cài đặt các gói phụ thuộc:
     ```bash
-    pip install numpy scipy pandas
+    pip install numpy scipy
     ```
+        ```bash
+    pip install pandas scipy
 2. Khởi chạy hệ thống:
     ```bash
     python RS.py
