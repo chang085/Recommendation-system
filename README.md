@@ -7,13 +7,13 @@ Dự án này cung cấp một hệ thống đề xuất phim (Movie Recommendat
 ## II. Cài đặt
 
 Để cài đặt và chạy dự án này trên máy của bạn, hãy làm theo các bước sau:
-
-1. Cài đặt các gói phụ thuộc:
+1. Cài đặt thư viện python bản mới nhất.
+2. Cài đặt các gói phụ thuộc:
     ```bash
-    pip install numpy scipy
+    pip install numpy 
     ```
     ```bash
-    pip install pandas scipy
+    pip install pandas 
     ```
 3. Khởi chạy hệ thống:
     ```bash
