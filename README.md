@@ -68,4 +68,4 @@ Sau khi đăng nhập, bạn có thể nhận các đề xuất phim dựa trên
 
 ## IV. Tổng kết
 
-Dự án này giúp người dùng quản lý thông tin cá nhân, dữ liệu phim và đánh giá phim một cách dễ dàng và hiệu quả. Hệ thống đề xuất phim cung cấp nhiều tính năng để người dùng có thể khám phá các phim mới dựa trên sở thích cá nhân và xu hướng hiện tại. Nếu bạn có bất kỳ câu hỏi hoặc góp ý nào, vui lòng liên hệ với chúng tôi qua email: 22010085@st.phenikaa-uni.edu.vn
+Dự án này đưa ra các đề xuất phim mới tới người dùng . Hệ thống đề xuất phim cung cấp nhiều tính năng để người dùng có thể khám phá các phim mới dựa trên sở thích cá nhân và xu hướng hiện tại. Nếu bạn có bất kỳ câu hỏi hoặc góp ý nào, vui lòng liên hệ với chúng tôi qua email: 22010085@st.phenikaa-uni.edu.vn
