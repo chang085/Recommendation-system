@@ -12,9 +12,9 @@ Dự án này cung cấp một hệ thống đề xuất phim (Movie Recommendat
     ```bash
     pip install numpy scipy
     ```
-        ```bash
+    ```bash
     pip install pandas scipy
-   ```
+    ```
 3. Khởi chạy hệ thống:
     ```bash
     python RS.py
