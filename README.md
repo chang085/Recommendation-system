@@ -16,9 +16,7 @@ Dự án này cung cấp một hệ thống đề xuất phim (Movie Recommendat
     pip install pandas 
     ```
 3. Khởi chạy hệ thống:
-    ```bash
-    python RS.py
-    ```
+
 
 ## III. Hướng dẫn sử dụng
 
