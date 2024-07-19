@@ -1,3 +1,5 @@
+import tkinter as tk
+from tkinter import messagebox, simpledialog
 import csv
 import numpy as np
 from scipy.spatial.distance import cosine
@@ -187,38 +189,113 @@ class UserAuthentication:
                 return True
         return False
 
+class MovieRecommendationUI:
+    def __init__(self, movie_system):
+        self.movie_system = movie_system
+        self.user_auth = UserAuthentication(movie_system)  # Instantiate UserAuthentication
+        self.window = tk.Tk()
+        self.window.title("Movie Recommendation System")
+        self.window.geometry("600x500")  # Set a larger window size
+        self.window.resizable(False, False)  # Disable resizing
+
+        # Create UI components
+        self.create_login_widgets()
+        self.create_recommendations_widgets()
+
+        # Center the frames
+        self.center_frame(self.login_frame)
+        self.recommendations_frame.pack_forget()  # Hide recommendations section initially
+
+    def center_frame(self, frame):
+        frame.place(relx=0.5, rely=0.5, anchor='center')  # Center the frame
+
+    def create_login_widgets(self):
+        # Login/Register Section
+        self.login_frame = tk.Frame(self.window, padx=20, pady=20, bg='lightgray')
+        
+        self.username_label = tk.Label(self.login_frame, text="Username:", font=("Arial", 14), bg='lightgray')
+        self.username_label.grid(row=0, column=0, padx=10, pady=10, sticky='e')
+        self.username_entry = tk.Entry(self.login_frame, font=("Arial", 14))
+        self.username_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        self.password_label = tk.Label(self.login_frame, text="Password:", font=("Arial", 14), bg='lightgray')
+        self.password_label.grid(row=1, column=0, padx=10, pady=10, sticky='e')
+        self.password_entry = tk.Entry(self.login_frame, show='*', font=("Arial", 14))
+        self.password_entry.grid(row=1, column=1, padx=10, pady=10)
+
+        self.login_button = tk.Button(self.login_frame, text="Login", command=self.login, font=("Arial", 14), width=15)
+        self.login_button.grid(row=2, column=0, padx=10, pady=10)
+
+        self.register_button = tk.Button(self.login_frame, text="Register", command=self.register, font=("Arial", 14), width=15)
+        self.register_button.grid(row=2, column=1, padx=10, pady=10)
+
+    def create_recommendations_widgets(self):
+        # Recommendations Section
+        self.recommendations_frame = tk.Frame(self.window, padx=20, pady=20, bg='lightblue')
+
+        self.recommendations_button = tk.Button(self.recommendations_frame, text="Get Recommendations", command=self.get_recommendations, font=("Arial", 14), width=20)
+        self.recommendations_button.grid(row=0, column=0, padx=10, pady=10)
+
+        self.recommendations_list = tk.Listbox(self.recommendations_frame, width=50, height=10, font=("Arial", 12))
+        self.recommendations_list.grid(row=1, column=0, padx=10, pady=10)
+
+    def login(self):
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+
+        if self.user_auth.login_user(username, password):  # Use UserAuthentication's login_user
+            messagebox.showinfo("Login", "Login successful!")
+            self.username_entry.delete(0, tk.END)
+            self.password_entry.delete(0, tk.END)
+            self.login_frame.pack_forget()  # Hide login section
+            self.recommendations_frame.pack(pady=10)  # Show recommendations section
+            self.center_frame(self.recommendations_frame)  # Center the recommendations frame
+        else:
+            messagebox.showerror("Login", "Invalid username or password.")
+
+    def register(self):
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+        age = simpledialog.askinteger("Age", "Enter your age:")
+        gender = simpledialog.askstring("Gender", "Enter your gender (Male/Female):")
+
+        if username and password and age is not None and gender in ['Male', 'Female']:
+            self.user_auth.register_user(username, password, age, gender)  # Use UserAuthentication's register_user
+            messagebox.showinfo("Registration", "Registration successful! You are now logged in.")
+            self.login_frame.pack_forget()  # Hide login section
+            self.recommendations_frame.pack(pady=10)  # Show recommendations section
+            self.center_frame(self.recommendations_frame)  # Center the recommendations frame
+        else:
+            if age is None:
+                messagebox.showwarning("Registration", "Please enter a valid age.")
+            elif gender not in ['Male', 'Female']:
+                messagebox.showwarning("Registration", "Gender must be either 'Male' or 'Female'.")
+            else:
+                messagebox.showwarning("Registration", "Please fill in all fields.")
+
+    def get_recommendations(self):
+        if self.movie_system.logged_in_user is None:
+            messagebox.showwarning("Recommendations", "Please login first to get recommendations.")
+            return
+
+        recommendations = self.movie_system.predict_user_ratings()
+        self.recommendations_list.delete(0, tk.END)
+
+        for movie in recommendations:
+            self.recommendations_list.insert(tk.END, f"{movie['title']} - Predicted Rating: {movie['rating']:.2f}")
+
+    def run(self):
+        self.window.mainloop()
+
 # Example usage:
-movie_system = MovieRecommendationSystem()
-user_auth = UserAuthentication(movie_system)
+if __name__ == "__main__":
+    movie_system = MovieRecommendationSystem()
+    user_auth = UserAuthentication(movie_system)
 
-movie_system.load_movie_data('data.csv')
-movie_system.load_user_data('user.csv')
-movie_system.load_user_ratings('ratings.csv')
+    # Load data
+    movie_system.load_movie_data('data.csv')
+    movie_system.load_user_data('user.csv')
+    movie_system.load_user_ratings('ratings.csv')
 
-user_choice = input("Welcome! Enter 'login' to login or 'register' to register: ")
-if user_choice.lower() == 'register':
-    name = input("Enter your name: ")
-    password = input("Enter your password: ")
-    age = int(input("Enter your age: "))
-    gender = input("Enter your gender: ")
-    user_auth.register_user(name, password, age, gender)
-    print("Registration successful! You are now logged in.")
-elif user_choice.lower() == 'login':
-    name = input("Enter your name: ")
-    password = input("Enter your password: ")
-    if user_auth.login_user(name, password):
-        print("Login successful!")
-    else:
-        print("Invalid username or password.")
-else:
-    print("Invalid choice. Please restart the program.")
-
-if movie_system.logged_in_user is not None:
-    user_info = movie_system.user_data[movie_system.logged_in_user]
-    gender = user_info['gender']
-
-    # Predict ratings for the logged in user
-    print("\nPredicted Ratings for New Movies:")
-    predictions = movie_system.predict_user_ratings()
-    for movie in predictions:
-        print(f"id: {movie['id']} Title: {movie['title']}, Predicted Rating: {movie['rating']}")
+    app = MovieRecommendationUI(movie_system)
+    app.run()
