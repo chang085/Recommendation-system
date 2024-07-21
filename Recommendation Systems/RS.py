@@ -157,6 +157,12 @@ class UserAuthentication:
         self.movie_system = movie_system
 
     def register_user(self, name, password, age, gender):
+        if not name or not password or age is None or gender not in ['Male', 'Female']:
+            raise ValueError("All fields must be filled correctly.")
+
+        if any(user_info['name'] == name for user_info in self.movie_system.user_data.values()):
+            raise ValueError("Username already exists.")
+
         user_id = len(self.movie_system.user_data) + 1
         with open('user.csv', 'a') as file:
             file.write(f"\n{user_id},{name},{password},{age},{gender}")
@@ -189,30 +195,51 @@ class UserAuthentication:
                 return True
         return False
 
+
 class MovieRecommendationUI:
     def __init__(self, movie_system):
         self.movie_system = movie_system
-        self.user_auth = UserAuthentication(movie_system)  # Instantiate UserAuthentication
+        self.user_auth = UserAuthentication(movie_system)  
         self.window = tk.Tk()
         self.window.title("Movie Recommendation System")
-        self.window.geometry("600x500")  # Set a larger window size
-        self.window.resizable(False, False)  # Disable resizing
+        self.window.geometry("600x500")  
+        self.window.resizable(False, False) 
 
-        # Create UI components
-        self.create_login_widgets()
-        self.create_recommendations_widgets()
+        
+        self.create_selection_widgets()
 
-        # Center the frames
-        self.center_frame(self.login_frame)
-        self.recommendations_frame.pack_forget()  # Hide recommendations section initially
+    def create_selection_widgets(self):
+        
+        self.selection_frame = tk.Frame(self.window, padx=20, pady=20, bg='lightgray')
 
-    def center_frame(self, frame):
-        frame.place(relx=0.5, rely=0.5, anchor='center')  # Center the frame
+        self.login_button = tk.Button(self.selection_frame, text="Login", command=self.show_login, font=("Arial", 14), width=20)
+        self.login_button.grid(row=0, column=0, padx=10, pady=10)
+
+        self.register_button = tk.Button(self.selection_frame, text="Register", command=self.show_register, font=("Arial", 14), width=20)
+        self.register_button.grid(row=1, column=0, padx=10, pady=10)
+
+        self.selection_frame.pack(expand=True)
+
+    def show_login(self):
+        self.selection_frame.pack_forget()  
+        self.create_login_widgets()  
+
+    def show_register(self):
+        self.selection_frame.pack_forget()  
+        self.create_register_widgets()  
+
+    def show_selection(self):
+        
+        if hasattr(self, 'login_frame'):
+            self.login_frame.pack_forget()
+        if hasattr(self, 'register_frame'):
+            self.register_frame.pack_forget()
+        self.selection_frame.pack(expand=True)
 
     def create_login_widgets(self):
-        # Login/Register Section
+
         self.login_frame = tk.Frame(self.window, padx=20, pady=20, bg='lightgray')
-        
+
         self.username_label = tk.Label(self.login_frame, text="Username:", font=("Arial", 14), bg='lightgray')
         self.username_label.grid(row=0, column=0, padx=10, pady=10, sticky='e')
         self.username_entry = tk.Entry(self.login_frame, font=("Arial", 14))
@@ -226,8 +253,76 @@ class MovieRecommendationUI:
         self.login_button = tk.Button(self.login_frame, text="Login", command=self.login, font=("Arial", 14), width=15)
         self.login_button.grid(row=2, column=0, padx=10, pady=10)
 
-        self.register_button = tk.Button(self.login_frame, text="Register", command=self.register, font=("Arial", 14), width=15)
-        self.register_button.grid(row=2, column=1, padx=10, pady=10)
+        self.back_button = tk.Button(self.login_frame, text="Back", command=self.show_selection, font=("Arial", 14), width=15)
+        self.back_button.grid(row=2, column=1, padx=10, pady=10)
+
+        self.login_frame.pack(expand=True)
+
+    def create_register_widgets(self):
+        self.register_frame = tk.Frame(self.window, padx=20, pady=20, bg='lightgray')
+
+        self.username_label = tk.Label(self.register_frame, text="Username:", font=("Arial", 14), bg='lightgray')
+        self.username_label.grid(row=0, column=0, padx=10, pady=10, sticky='e')
+        self.username_entry = tk.Entry(self.register_frame, font=("Arial", 14))
+        self.username_entry.grid(row=0, column=1, padx=10, pady=10)
+
+        self.password_label = tk.Label(self.register_frame, text="Password:", font=("Arial", 14), bg='lightgray')
+        self.password_label.grid(row=1, column=0, padx=10, pady=10, sticky='e')
+        self.password_entry = tk.Entry(self.register_frame, show='*', font=("Arial", 14))
+        self.password_entry.grid(row=1, column=1, padx=10, pady=10)
+
+        self.age_label = tk.Label(self.register_frame, text="Age:", font=("Arial", 14), bg='lightgray')
+        self.age_label.grid(row=2, column=0, padx=10, pady=10, sticky='e')
+        self.age_entry = tk.Entry(self.register_frame, font=("Arial", 14))
+        self.age_entry.grid(row=2, column=1, padx=10, pady=10)
+
+        self.gender_label = tk.Label(self.register_frame, text="Gender (Male/Female):", font=("Arial", 14), bg='lightgray')
+        self.gender_label.grid(row=3, column=0, padx=10, pady=10, sticky='e')
+        self.gender_entry = tk.Entry(self.register_frame, font=("Arial", 14))
+        self.gender_entry.grid(row=3, column=1, padx=10, pady=10)
+
+        self.register_button = tk.Button(self.register_frame, text="Register", command=self.register, font=("Arial", 14), width=15)
+        self.register_button.grid(row=4, column=0, padx=10, pady=10)
+
+        self.back_button = tk.Button(self.register_frame, text="Back", command=self.show_selection, font=("Arial", 14), width=15)
+        self.back_button.grid(row=4, column=1, padx=10, pady=10)
+
+        self.register_frame.pack(expand=True)
+
+    def login(self):
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+
+        if self.user_auth.login_user(username, password): 
+            messagebox.showinfo("Login", "Login successful!")
+            self.username_entry.delete(0, tk.END)
+            self.password_entry.delete(0, tk.END)
+            self.login_frame.pack_forget()  
+            self.create_recommendations_widgets() 
+        else:
+            messagebox.showerror("Login", "Invalid username or password.")
+
+    def register(self):
+        username = self.username_entry.get()
+        password = self.password_entry.get()
+        try:
+            age = int(self.age_entry.get())
+            gender = self.gender_entry.get()
+        except ValueError:
+            messagebox.showwarning("Registration", "Age must be a number.")
+            return
+
+        if gender not in ['Male', 'Female']:
+            messagebox.showwarning("Registration", "Gender must be either 'Male' or 'Female'.")
+            return
+
+        try:
+            self.user_auth.register_user(username, password, age, gender)  
+            messagebox.showinfo("Registration", "Registration successful! You are now logged in.")
+            self.register_frame.pack_forget()  
+            self.create_recommendations_widgets()  
+        except ValueError as e:
+            messagebox.showerror("Registration", str(e))
 
     def create_recommendations_widgets(self):
         # Recommendations Section
@@ -239,39 +334,7 @@ class MovieRecommendationUI:
         self.recommendations_list = tk.Listbox(self.recommendations_frame, width=50, height=10, font=("Arial", 12))
         self.recommendations_list.grid(row=1, column=0, padx=10, pady=10)
 
-    def login(self):
-        username = self.username_entry.get()
-        password = self.password_entry.get()
-
-        if self.user_auth.login_user(username, password):  # Use UserAuthentication's login_user
-            messagebox.showinfo("Login", "Login successful!")
-            self.username_entry.delete(0, tk.END)
-            self.password_entry.delete(0, tk.END)
-            self.login_frame.pack_forget()  # Hide login section
-            self.recommendations_frame.pack(pady=10)  # Show recommendations section
-            self.center_frame(self.recommendations_frame)  # Center the recommendations frame
-        else:
-            messagebox.showerror("Login", "Invalid username or password.")
-
-    def register(self):
-        username = self.username_entry.get()
-        password = self.password_entry.get()
-        age = simpledialog.askinteger("Age", "Enter your age:")
-        gender = simpledialog.askstring("Gender", "Enter your gender (Male/Female):")
-
-        if username and password and age is not None and gender in ['Male', 'Female']:
-            self.user_auth.register_user(username, password, age, gender)  # Use UserAuthentication's register_user
-            messagebox.showinfo("Registration", "Registration successful! You are now logged in.")
-            self.login_frame.pack_forget()  # Hide login section
-            self.recommendations_frame.pack(pady=10)  # Show recommendations section
-            self.center_frame(self.recommendations_frame)  # Center the recommendations frame
-        else:
-            if age is None:
-                messagebox.showwarning("Registration", "Please enter a valid age.")
-            elif gender not in ['Male', 'Female']:
-                messagebox.showwarning("Registration", "Gender must be either 'Male' or 'Female'.")
-            else:
-                messagebox.showwarning("Registration", "Please fill in all fields.")
+        self.recommendations_frame.pack(expand=True)
 
     def get_recommendations(self):
         if self.movie_system.logged_in_user is None:
@@ -287,12 +350,13 @@ class MovieRecommendationUI:
     def run(self):
         self.window.mainloop()
 
-# Example usage:
+
+
 if __name__ == "__main__":
     movie_system = MovieRecommendationSystem()
     user_auth = UserAuthentication(movie_system)
 
-    # Load data
+    
     movie_system.load_movie_data('data.csv')
     movie_system.load_user_data('user.csv')
     movie_system.load_user_ratings('ratings.csv')
