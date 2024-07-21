@@ -15,9 +15,9 @@ Dự án này cung cấp một hệ thống đề xuất phim (Movie Recommendat
     ```bash
     pip install pandas 
     ```
-        ```bash
+    ```bash
     pip install tkinter
-        ```
+    ```
 3. Khởi chạy hệ thống:
 
 
