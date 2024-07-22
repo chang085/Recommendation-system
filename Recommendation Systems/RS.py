@@ -4,12 +4,22 @@ import csv
 import numpy as np
 from scipy.spatial.distance import cosine
 
+import numpy as np
+import pandas as pd
+from sklearn.preprocessing import OneHotEncoder, MinMaxScaler
+from sklearn.metrics.pairwise import cosine_similarity
+import tkinter as tk
+from tkinter import messagebox, simpledialog
+import csv
+from scipy.spatial.distance import cosine
+
 class MovieRecommendationSystem:
     def __init__(self):
         self.movies = {}
         self.user_data = {}
         self.user_ratings = {}
         self.logged_in_user = None
+        self.similarity_matrix = None
 
     def load_movie_data(self, file_path):
         with open(file_path, 'r') as file:
@@ -63,6 +73,38 @@ class MovieRecommendationSystem:
                         print(f"Skipping line due to error: {e}")
                 else:
                     print(f"Skipping incomplete row: {row}")
+
+    def load_similarity_matrix(self, file_path):
+        self.similarity_matrix = pd.read_csv(file_path, index_col=0)
+
+    def recommend_movies_based_on_similarity(self):
+        if self.logged_in_user is None:
+            return "Please login first to get recommendations."
+
+        user_ratings = self.user_ratings[self.logged_in_user]
+
+        # Collect all movies rated by the user with a rating from 1 to 10
+        rated_movies = [(i + 1, rating) for i, rating in enumerate(user_ratings) if 1 <= rating <= 10]
+
+        if not rated_movies:
+            return "No valid ratings available for recommendations."
+
+        movie_scores = {}
+
+        for movie_id, rating in rated_movies:
+            similar_movies = self.similarity_matrix.loc[movie_id].nlargest(6).index.tolist()
+            similar_movies.remove(str(movie_id))  # Remove the movie itself from the list
+
+            for similar_movie_id in similar_movies:
+                similar_movie_id = int(similar_movie_id)
+                if similar_movie_id in movie_scores:
+                    movie_scores[similar_movie_id] += self.similarity_matrix.loc[movie_id, str(similar_movie_id)] * rating
+                else:
+                    movie_scores[similar_movie_id] = self.similarity_matrix.loc[movie_id, str(similar_movie_id)] * rating
+
+        recommended_movies = sorted(movie_scores.items(), key=lambda x: x[1], reverse=True)[:5]
+        recommended_movies_info = [self.movies[movie_id] for movie_id, score in recommended_movies]
+        return recommended_movies_info
 
     def new_user_recommendations(self):
         sorted_movies_by_rating = sorted(self.movies.values(), key=lambda x: x["rating"], reverse=True)
@@ -151,6 +193,31 @@ class MovieRecommendationSystem:
         top_genre_movies = sorted(genre_movies, key=lambda x: x["rating"], reverse=True)
         return top_genre_movies[:5]
 
+    def generate_similarity_matrix(self, movie_data_file='data.csv', output_file='movie_similarity_matrix.csv'):
+        df = pd.read_csv(movie_data_file)
+        
+        # Remove the 'view' column because it is not used to calculate similarity
+        df = df.drop(columns=['view'])
+        # Encoding the 'genre' Column
+        encoder = OneHotEncoder(sparse_output=False)
+        genre_encoded = encoder.fit_transform(df[['genre']])
+
+        # Scaling the 'release_year' and 'rating' Columns
+        scaler = MinMaxScaler()
+        release_year_scaled = scaler.fit_transform(df[['release_year']])
+        rating_scaled = scaler.fit_transform(df[['rating']])
+
+        # Combining Features
+        features = np.hstack([genre_encoded, release_year_scaled, rating_scaled])
+        # Calculating the Cosine Similarity Matrix
+        similarity_matrix = cosine_similarity(features) # type: ignore
+
+        # Creating a DataFrame for the Similarity Matrix
+        similarity_df = pd.DataFrame(similarity_matrix, index=df['id'], columns=df['id'])
+
+        # Save to CSV file
+        similarity_df.to_csv(output_file)
+
 
 class UserAuthentication:
     def __init__(self, movie_system):
@@ -201,21 +268,19 @@ class MovieRecommendationUI:
         self.movie_system = movie_system
         self.user_auth = UserAuthentication(movie_system)  
         self.window = tk.Tk()
-        self.window.title("Movie Recommendation System")
+        self.window.title("Hệ Thống Khuyến Nghị Phim")
         self.window.geometry("600x500")  
         self.window.resizable(False, False) 
 
-        
         self.create_selection_widgets()
 
     def create_selection_widgets(self):
-        
         self.selection_frame = tk.Frame(self.window, padx=20, pady=20, bg='lightgray')
 
-        self.login_button = tk.Button(self.selection_frame, text="Login", command=self.show_login, font=("Arial", 14), width=20)
+        self.login_button = tk.Button(self.selection_frame, text="Đăng Nhập", command=self.show_login, font=("Arial", 14), width=20)
         self.login_button.grid(row=0, column=0, padx=10, pady=10)
 
-        self.register_button = tk.Button(self.selection_frame, text="Register", command=self.show_register, font=("Arial", 14), width=20)
+        self.register_button = tk.Button(self.selection_frame, text="Đăng Ký", command=self.show_register, font=("Arial", 14), width=20)
         self.register_button.grid(row=1, column=0, padx=10, pady=10)
 
         self.selection_frame.pack(expand=True)
@@ -229,7 +294,6 @@ class MovieRecommendationUI:
         self.create_register_widgets()  
 
     def show_selection(self):
-        
         if hasattr(self, 'login_frame'):
             self.login_frame.pack_forget()
         if hasattr(self, 'register_frame'):
@@ -237,23 +301,22 @@ class MovieRecommendationUI:
         self.selection_frame.pack(expand=True)
 
     def create_login_widgets(self):
-
         self.login_frame = tk.Frame(self.window, padx=20, pady=20, bg='lightgray')
 
-        self.username_label = tk.Label(self.login_frame, text="Username:", font=("Arial", 14), bg='lightgray')
+        self.username_label = tk.Label(self.login_frame, text="Tên người dùng:", font=("Arial", 14), bg='lightgray')
         self.username_label.grid(row=0, column=0, padx=10, pady=10, sticky='e')
         self.username_entry = tk.Entry(self.login_frame, font=("Arial", 14))
         self.username_entry.grid(row=0, column=1, padx=10, pady=10)
 
-        self.password_label = tk.Label(self.login_frame, text="Password:", font=("Arial", 14), bg='lightgray')
+        self.password_label = tk.Label(self.login_frame, text="Mật khẩu:", font=("Arial", 14), bg='lightgray')
         self.password_label.grid(row=1, column=0, padx=10, pady=10, sticky='e')
         self.password_entry = tk.Entry(self.login_frame, show='*', font=("Arial", 14))
         self.password_entry.grid(row=1, column=1, padx=10, pady=10)
 
-        self.login_button = tk.Button(self.login_frame, text="Login", command=self.login, font=("Arial", 14), width=15)
+        self.login_button = tk.Button(self.login_frame, text="Đăng Nhập", command=self.login, font=("Arial", 14), width=15)
         self.login_button.grid(row=2, column=0, padx=10, pady=10)
 
-        self.back_button = tk.Button(self.login_frame, text="Back", command=self.show_selection, font=("Arial", 14), width=15)
+        self.back_button = tk.Button(self.login_frame, text="Quay lại", command=self.show_selection, font=("Arial", 14), width=15)
         self.back_button.grid(row=2, column=1, padx=10, pady=10)
 
         self.login_frame.pack(expand=True)
@@ -261,30 +324,30 @@ class MovieRecommendationUI:
     def create_register_widgets(self):
         self.register_frame = tk.Frame(self.window, padx=20, pady=20, bg='lightgray')
 
-        self.username_label = tk.Label(self.register_frame, text="Username:", font=("Arial", 14), bg='lightgray')
+        self.username_label = tk.Label(self.register_frame, text="Tên người dùng:", font=("Arial", 14), bg='lightgray')
         self.username_label.grid(row=0, column=0, padx=10, pady=10, sticky='e')
         self.username_entry = tk.Entry(self.register_frame, font=("Arial", 14))
         self.username_entry.grid(row=0, column=1, padx=10, pady=10)
 
-        self.password_label = tk.Label(self.register_frame, text="Password:", font=("Arial", 14), bg='lightgray')
+        self.password_label = tk.Label(self.register_frame, text="Mật khẩu:", font=("Arial", 14), bg='lightgray')
         self.password_label.grid(row=1, column=0, padx=10, pady=10, sticky='e')
         self.password_entry = tk.Entry(self.register_frame, show='*', font=("Arial", 14))
         self.password_entry.grid(row=1, column=1, padx=10, pady=10)
 
-        self.age_label = tk.Label(self.register_frame, text="Age:", font=("Arial", 14), bg='lightgray')
+        self.age_label = tk.Label(self.register_frame, text="Tuổi:", font=("Arial", 14), bg='lightgray')
         self.age_label.grid(row=2, column=0, padx=10, pady=10, sticky='e')
         self.age_entry = tk.Entry(self.register_frame, font=("Arial", 14))
         self.age_entry.grid(row=2, column=1, padx=10, pady=10)
 
-        self.gender_label = tk.Label(self.register_frame, text="Gender (Male/Female):", font=("Arial", 14), bg='lightgray')
+        self.gender_label = tk.Label(self.register_frame, text="Giới tính (Nam/Nữ):", font=("Arial", 14), bg='lightgray')
         self.gender_label.grid(row=3, column=0, padx=10, pady=10, sticky='e')
         self.gender_entry = tk.Entry(self.register_frame, font=("Arial", 14))
         self.gender_entry.grid(row=3, column=1, padx=10, pady=10)
 
-        self.register_button = tk.Button(self.register_frame, text="Register", command=self.register, font=("Arial", 14), width=15)
+        self.register_button = tk.Button(self.register_frame, text="Đăng Ký", command=self.register, font=("Arial", 14), width=15)
         self.register_button.grid(row=4, column=0, padx=10, pady=10)
 
-        self.back_button = tk.Button(self.register_frame, text="Back", command=self.show_selection, font=("Arial", 14), width=15)
+        self.back_button = tk.Button(self.register_frame, text="Quay lại", command=self.show_selection, font=("Arial", 14), width=15)
         self.back_button.grid(row=4, column=1, padx=10, pady=10)
 
         self.register_frame.pack(expand=True)
@@ -294,13 +357,13 @@ class MovieRecommendationUI:
         password = self.password_entry.get()
 
         if self.user_auth.login_user(username, password): 
-            messagebox.showinfo("Login", "Login successful!")
+            messagebox.showinfo("Đăng Nhập", "Đăng nhập thành công!")
             self.username_entry.delete(0, tk.END)
             self.password_entry.delete(0, tk.END)
             self.login_frame.pack_forget()  
             self.create_recommendations_widgets() 
         else:
-            messagebox.showerror("Login", "Invalid username or password.")
+            messagebox.showerror("Đăng Nhập", "Tên người dùng hoặc mật khẩu không hợp lệ.")
 
     def register(self):
         username = self.username_entry.get()
@@ -309,48 +372,65 @@ class MovieRecommendationUI:
             age = int(self.age_entry.get())
             gender = self.gender_entry.get()
         except ValueError:
-            messagebox.showwarning("Registration", "Age must be a number.")
+            messagebox.showwarning("Đăng Ký", "Tuổi phải là số.")
             return
 
         if gender not in ['Male', 'Female']:
-            messagebox.showwarning("Registration", "Gender must be either 'Male' or 'Female'.")
+            messagebox.showwarning("Đăng Ký", "Giới tính phải là 'Nam' hoặc 'Nữ'.")
             return
 
         try:
             self.user_auth.register_user(username, password, age, gender)  
-            messagebox.showinfo("Registration", "Registration successful! You are now logged in.")
+            messagebox.showinfo("Đăng Ký", "Đăng ký thành công! Bạn đã đăng nhập ngay.")
             self.register_frame.pack_forget()  
             self.create_recommendations_widgets()  
         except ValueError as e:
-            messagebox.showerror("Registration", str(e))
+            messagebox.showerror("Đăng Ký", str(e))
 
     def create_recommendations_widgets(self):
-        # Recommendations Section
+        # Phần khuyến nghị
         self.recommendations_frame = tk.Frame(self.window, padx=20, pady=20, bg='lightblue')
 
-        self.recommendations_button = tk.Button(self.recommendations_frame, text="Get Recommendations", command=self.get_recommendations, font=("Arial", 14), width=20)
+        # Nút khuyến nghị dựa trên đánh giá
+        self.recommendations_button = tk.Button(self.recommendations_frame, text="Khuyến nghị dự trên đánh giá", command=lambda: self.get_recommendations("based_predict_user_ratings"), font=("Arial", 14), width=30)
         self.recommendations_button.grid(row=0, column=0, padx=10, pady=10)
 
+        # Nút khuyến nghị theo giới tính
+        self.gender_recommendations_button = tk.Button(self.recommendations_frame, text="Khuyến nghị theo giới tính", command=lambda: self.get_recommendations("based_on_gender"), font=("Arial", 14), width=30)
+        self.gender_recommendations_button.grid(row=1, column=0, padx=10, pady=10)
+
+        # Nút khuyến nghị tổng quát
+        self.get_recommendations_button = tk.Button(self.recommendations_frame, text="Khuyến nghị dự trên lịch sử xem", command=lambda: self.get_recommendations("based_existing_user_recommendations"), font=("Arial", 14), width=30)
+        self.get_recommendations_button.grid(row=2, column=0, padx=10, pady=10)
+
+        # Danh sách khuyến nghị
         self.recommendations_list = tk.Listbox(self.recommendations_frame, width=50, height=10, font=("Arial", 12))
-        self.recommendations_list.grid(row=1, column=0, padx=10, pady=10)
+        self.recommendations_list.grid(row=3, column=0, padx=10, pady=10)
 
         self.recommendations_frame.pack(expand=True)
 
-    def get_recommendations(self):
+    def get_recommendations(self, recommendation_type="based_predict_user_ratings"):
         if self.movie_system.logged_in_user is None:
-            messagebox.showwarning("Recommendations", "Please login first to get recommendations.")
+            messagebox.showwarning("Khuyến Nghị", "Vui lòng đăng nhập trước khi nhận khuyến nghị.")
             return
 
-        recommendations = self.movie_system.predict_user_ratings()
+        if recommendation_type == "based_predict_user_ratings":
+            recommendations = self.movie_system.predict_user_ratings()
+        elif recommendation_type == "based_on_gender":
+            user_gender = self.movie_system.user_data[self.movie_system.logged_in_user]['gender']
+            recommendations = self.movie_system.get_gender_based_recommendations(user_gender)
+        elif recommendation_type == "based_existing_user_recommendations":
+            recommendations = self.movie_system.existing_user_recommendations()
+        else:
+            recommendations = self.movie_system.predict_user_ratings()  # Mặc định nếu không có loại khuyến nghị cụ thể
+
         self.recommendations_list.delete(0, tk.END)
 
         for movie in recommendations:
-            self.recommendations_list.insert(tk.END, f"{movie['title']} - Predicted Rating: {movie['rating']:.2f}")
+            self.recommendations_list.insert(tk.END, f"{movie['title']} - Rating: {movie.get('rating', 'N/A'):.2f}")
 
     def run(self):
         self.window.mainloop()
-
-
 
 if __name__ == "__main__":
     movie_system = MovieRecommendationSystem()
