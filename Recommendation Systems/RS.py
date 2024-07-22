@@ -1,8 +1,3 @@
-import tkinter as tk
-from tkinter import messagebox, simpledialog
-import csv
-import numpy as np
-from scipy.spatial.distance import cosine
 
 import numpy as np
 import pandas as pd
@@ -268,7 +263,7 @@ class MovieRecommendationUI:
         self.movie_system = movie_system
         self.user_auth = UserAuthentication(movie_system)  
         self.window = tk.Tk()
-        self.window.title("Hệ Thống Khuyến Nghị Phim")
+        self.window.title("Movie Recommendation System")
         self.window.geometry("600x500")  
         self.window.resizable(False, False) 
 
@@ -277,10 +272,10 @@ class MovieRecommendationUI:
     def create_selection_widgets(self):
         self.selection_frame = tk.Frame(self.window, padx=20, pady=20, bg='lightgray')
 
-        self.login_button = tk.Button(self.selection_frame, text="Đăng Nhập", command=self.show_login, font=("Arial", 14), width=20)
+        self.login_button = tk.Button(self.selection_frame, text="Log in", command=self.show_login, font=("Arial", 14), width=20)
         self.login_button.grid(row=0, column=0, padx=10, pady=10)
 
-        self.register_button = tk.Button(self.selection_frame, text="Đăng Ký", command=self.show_register, font=("Arial", 14), width=20)
+        self.register_button = tk.Button(self.selection_frame, text="Register", command=self.show_register, font=("Arial", 14), width=20)
         self.register_button.grid(row=1, column=0, padx=10, pady=10)
 
         self.selection_frame.pack(expand=True)
@@ -303,20 +298,20 @@ class MovieRecommendationUI:
     def create_login_widgets(self):
         self.login_frame = tk.Frame(self.window, padx=20, pady=20, bg='lightgray')
 
-        self.username_label = tk.Label(self.login_frame, text="Tên người dùng:", font=("Arial", 14), bg='lightgray')
+        self.username_label = tk.Label(self.login_frame, text="User name:", font=("Arial", 14), bg='lightgray')
         self.username_label.grid(row=0, column=0, padx=10, pady=10, sticky='e')
         self.username_entry = tk.Entry(self.login_frame, font=("Arial", 14))
         self.username_entry.grid(row=0, column=1, padx=10, pady=10)
 
-        self.password_label = tk.Label(self.login_frame, text="Mật khẩu:", font=("Arial", 14), bg='lightgray')
+        self.password_label = tk.Label(self.login_frame, text="Password:", font=("Arial", 14), bg='lightgray')
         self.password_label.grid(row=1, column=0, padx=10, pady=10, sticky='e')
         self.password_entry = tk.Entry(self.login_frame, show='*', font=("Arial", 14))
         self.password_entry.grid(row=1, column=1, padx=10, pady=10)
 
-        self.login_button = tk.Button(self.login_frame, text="Đăng Nhập", command=self.login, font=("Arial", 14), width=15)
+        self.login_button = tk.Button(self.login_frame, text="Log in", command=self.login, font=("Arial", 14), width=15)
         self.login_button.grid(row=2, column=0, padx=10, pady=10)
 
-        self.back_button = tk.Button(self.login_frame, text="Quay lại", command=self.show_selection, font=("Arial", 14), width=15)
+        self.back_button = tk.Button(self.login_frame, text="Back", command=self.show_selection, font=("Arial", 14), width=15)
         self.back_button.grid(row=2, column=1, padx=10, pady=10)
 
         self.login_frame.pack(expand=True)
@@ -324,30 +319,30 @@ class MovieRecommendationUI:
     def create_register_widgets(self):
         self.register_frame = tk.Frame(self.window, padx=20, pady=20, bg='lightgray')
 
-        self.username_label = tk.Label(self.register_frame, text="Tên người dùng:", font=("Arial", 14), bg='lightgray')
+        self.username_label = tk.Label(self.register_frame, text="User name:", font=("Arial", 14), bg='lightgray')
         self.username_label.grid(row=0, column=0, padx=10, pady=10, sticky='e')
         self.username_entry = tk.Entry(self.register_frame, font=("Arial", 14))
         self.username_entry.grid(row=0, column=1, padx=10, pady=10)
 
-        self.password_label = tk.Label(self.register_frame, text="Mật khẩu:", font=("Arial", 14), bg='lightgray')
+        self.password_label = tk.Label(self.register_frame, text="Password:", font=("Arial", 14), bg='lightgray')
         self.password_label.grid(row=1, column=0, padx=10, pady=10, sticky='e')
         self.password_entry = tk.Entry(self.register_frame, show='*', font=("Arial", 14))
         self.password_entry.grid(row=1, column=1, padx=10, pady=10)
 
-        self.age_label = tk.Label(self.register_frame, text="Tuổi:", font=("Arial", 14), bg='lightgray')
+        self.age_label = tk.Label(self.register_frame, text="Age:", font=("Arial", 14), bg='lightgray')
         self.age_label.grid(row=2, column=0, padx=10, pady=10, sticky='e')
         self.age_entry = tk.Entry(self.register_frame, font=("Arial", 14))
         self.age_entry.grid(row=2, column=1, padx=10, pady=10)
 
-        self.gender_label = tk.Label(self.register_frame, text="Giới tính (Nam/Nữ):", font=("Arial", 14), bg='lightgray')
+        self.gender_label = tk.Label(self.register_frame, text="Gender (Male/Female):", font=("Arial", 14), bg='lightgray')
         self.gender_label.grid(row=3, column=0, padx=10, pady=10, sticky='e')
         self.gender_entry = tk.Entry(self.register_frame, font=("Arial", 14))
         self.gender_entry.grid(row=3, column=1, padx=10, pady=10)
 
-        self.register_button = tk.Button(self.register_frame, text="Đăng Ký", command=self.register, font=("Arial", 14), width=15)
+        self.register_button = tk.Button(self.register_frame, text="Register", command=self.register, font=("Arial", 14), width=15)
         self.register_button.grid(row=4, column=0, padx=10, pady=10)
 
-        self.back_button = tk.Button(self.register_frame, text="Quay lại", command=self.show_selection, font=("Arial", 14), width=15)
+        self.back_button = tk.Button(self.register_frame, text="Back", command=self.show_selection, font=("Arial", 14), width=15)
         self.back_button.grid(row=4, column=1, padx=10, pady=10)
 
         self.register_frame.pack(expand=True)
@@ -357,13 +352,13 @@ class MovieRecommendationUI:
         password = self.password_entry.get()
 
         if self.user_auth.login_user(username, password): 
-            messagebox.showinfo("Đăng Nhập", "Đăng nhập thành công!")
+            messagebox.showinfo("Log in", "Log in successfully!")
             self.username_entry.delete(0, tk.END)
             self.password_entry.delete(0, tk.END)
             self.login_frame.pack_forget()  
             self.create_recommendations_widgets() 
         else:
-            messagebox.showerror("Đăng Nhập", "Tên người dùng hoặc mật khẩu không hợp lệ.")
+            messagebox.showerror("Log in", "Invalid username or password.")
 
     def register(self):
         username = self.username_entry.get()
@@ -372,38 +367,38 @@ class MovieRecommendationUI:
             age = int(self.age_entry.get())
             gender = self.gender_entry.get()
         except ValueError:
-            messagebox.showwarning("Đăng Ký", "Tuổi phải là số.")
+            messagebox.showwarning("Register", "Age must be a number.")
             return
 
         if gender not in ['Male', 'Female']:
-            messagebox.showwarning("Đăng Ký", "Giới tính phải là 'Nam' hoặc 'Nữ'.")
+            messagebox.showwarning("Register", "Gender must be 'Male' or 'Female'.")
             return
 
         try:
             self.user_auth.register_user(username, password, age, gender)  
-            messagebox.showinfo("Đăng Ký", "Đăng ký thành công! Bạn đã đăng nhập ngay.")
+            messagebox.showinfo("Register", "Register successfully! You are logged in now.")
             self.register_frame.pack_forget()  
             self.create_recommendations_widgets()  
         except ValueError as e:
-            messagebox.showerror("Đăng Ký", str(e))
+            messagebox.showerror("Register", str(e))
 
     def create_recommendations_widgets(self):
-        # Phần khuyến nghị
+       # Recommendation section
         self.recommendations_frame = tk.Frame(self.window, padx=20, pady=20, bg='lightblue')
 
-        # Nút khuyến nghị dựa trên đánh giá
-        self.recommendations_button = tk.Button(self.recommendations_frame, text="Khuyến nghị dự trên đánh giá", command=lambda: self.get_recommendations("based_predict_user_ratings"), font=("Arial", 14), width=30)
+        # Recommendation button based on reviews
+        self.recommendations_button = tk.Button(self.recommendations_frame, text="Recommendation based on reviews", command=lambda: self.get_recommendations("based_predict_user_ratings"), font=("Arial", 14), width=30)
         self.recommendations_button.grid(row=0, column=0, padx=10, pady=10)
 
-        # Nút khuyến nghị theo giới tính
-        self.gender_recommendations_button = tk.Button(self.recommendations_frame, text="Khuyến nghị theo giới tính", command=lambda: self.get_recommendations("based_on_gender"), font=("Arial", 14), width=30)
+        # Recommendation button by gender
+        self.gender_recommendations_button = tk.Button(self.recommendations_frame, text="Recommendations by gender", command=lambda: self.get_recommendations("based_on_gender"), font=("Arial", 14), width=30)
         self.gender_recommendations_button.grid(row=1, column=0, padx=10, pady=10)
 
-        # Nút khuyến nghị tổng quát
-        self.get_recommendations_button = tk.Button(self.recommendations_frame, text="Khuyến nghị dự trên lịch sử xem", command=lambda: self.get_recommendations("based_existing_user_recommendations"), font=("Arial", 14), width=30)
+        # General recommendation button
+        self.get_recommendations_button = tk.Button(self.recommendations_frame, text="Recommendations are based on historical reviews", command=lambda: self.get_recommendations("based_existing_user_recommendations"), font=("Arial", 14), width=30)
         self.get_recommendations_button.grid(row=2, column=0, padx=10, pady=10)
 
-        # Danh sách khuyến nghị
+        # Recommendation list
         self.recommendations_list = tk.Listbox(self.recommendations_frame, width=50, height=10, font=("Arial", 12))
         self.recommendations_list.grid(row=3, column=0, padx=10, pady=10)
 
@@ -411,7 +406,7 @@ class MovieRecommendationUI:
 
     def get_recommendations(self, recommendation_type="based_predict_user_ratings"):
         if self.movie_system.logged_in_user is None:
-            messagebox.showwarning("Khuyến Nghị", "Vui lòng đăng nhập trước khi nhận khuyến nghị.")
+            messagebox.showwarning("Recommendations", "Please log in before receiving recommendations.")
             return
 
         if recommendation_type == "based_predict_user_ratings":
@@ -422,7 +417,7 @@ class MovieRecommendationUI:
         elif recommendation_type == "based_existing_user_recommendations":
             recommendations = self.movie_system.existing_user_recommendations()
         else:
-            recommendations = self.movie_system.predict_user_ratings()  # Mặc định nếu không có loại khuyến nghị cụ thể
+            recommendations = self.movie_system.predict_user_ratings()  # Default if there is no specific recommendation type
 
         self.recommendations_list.delete(0, tk.END)
 
